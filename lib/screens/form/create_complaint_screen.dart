@@ -1,92 +1,113 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import 'dart:convert';
-import 'package:shared_preferences/shared_preferences.dart';
 
-class CreateComplaintScreen extends StatelessWidget {
-  const CreateComplaintScreen({Key? key}) : super(key: key);
-
+class CreateComplaintScreen extends StatefulWidget {
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Buat Pengaduan Baru'),
-      ),
-      body: const Padding(
-        padding: EdgeInsets.all(20.0),
-        child: ComplaintForm(),
-      ),
-    );
-  }
+  _CreateComplaintScreenState createState() => _CreateComplaintScreenState();
 }
 
-class ComplaintForm extends StatefulWidget {
-  const ComplaintForm({Key? key}) : super(key: key);
+class _CreateComplaintScreenState extends State<CreateComplaintScreen> {
+  TextEditingController isiLaporanController = TextEditingController();
+  TextEditingController fotoController = TextEditingController();
+  GlobalKey<FormState> formKey =
+      GlobalKey<FormState>(); // Form key for validation
 
-  @override
-  _ComplaintFormState createState() => _ComplaintFormState();
-}
+  Future<void> submitData() async {
+    if (formKey.currentState!.validate()) {
+      var url = Uri.parse('http://127.0.0.1:8000/api/pengaduan/create');
+      var response = await http.post(
+        url,
+        body: {
+          'isi_laporan': isiLaporanController.text,
+          'foto': fotoController.text,
+          // 'kategori': kategoryController.text,
+        },
+      );
 
-class _ComplaintFormState extends State<ComplaintForm> {
-  final TextEditingController _complaintController = TextEditingController();
-  final TextEditingController _photoController = TextEditingController();
-
-  Future<void> saveComplaintToDatabase(
-      String complaintText, String photoURL) async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    int? masyarakatId = prefs.getInt('masyarakat_id');
-
-    final response = await http.post(
-      Uri.parse('http://127.0.0.1:8000/api/pengaduan/create'),
-      headers: <String, String>{
-        'Content-Type': 'application/json; charset=UTF-8',
-      },
-      body: jsonEncode(<String, dynamic>{
-        'isi_laporan': complaintText,
-        'foto': photoURL,
-        'masyarakat_id': masyarakatId, // Pastikan nilai ini tidak null
-      }),
-    );
-
-    if (response.statusCode == 200) {
-      print('Data berhasil disimpan');
-    } else {
-      print('Gagal menyimpan data: ${response.statusCode}');
+      if (response.statusCode == 201) {
+        Map<String, dynamic> responseData = json.decode(response.body);
+        if (responseData.containsKey('message')) {
+          // Data terkirim berhasil, tampilkan alert
+          showDialog(
+            context: context,
+            builder: (BuildContext context) {
+              return AlertDialog(
+                title: Text('Sukses'),
+                content: Text(responseData['message']),
+                actions: [
+                  TextButton(
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                      Navigator.pushNamed(
+                          context, '/home'); // Navigasi ke layar home
+                    },
+                    child: Text('OK'),
+                  ),
+                ],
+              );
+            },
+          );
+        } else {
+          print('Respon tidak berisi pesan');
+        }
+      } else {
+        print('Gagal mengirim data. Status: ${response.statusCode}');
+        // Tampilkan pesan atau lakukan penanganan kesalahan lainnya
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Form(
-      child: Column(
-        children: <Widget>[
-          TextFormField(
-            controller: _complaintController,
-            maxLines: 5,
-            decoration: const InputDecoration(
-              labelText: 'Isi Laporan Pengaduan',
-              border: OutlineInputBorder(),
-            ),
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Buat Pengaduan'),
+      ),
+      body: Padding(
+        padding: EdgeInsets.all(16.0),
+        child: Form(
+          key: formKey,
+          child: Column(
+            children: [
+              TextFormField(
+                controller: isiLaporanController,
+                decoration: InputDecoration(labelText: 'Isi Laporan'),
+                validator: (value) {
+                  if (value!.isEmpty) {
+                    return 'Isi Laporan tidak boleh kosong';
+                  }
+                  return null;
+                },
+              ),
+              SizedBox(height: 20),
+              TextFormField(
+                controller: fotoController,
+                decoration: InputDecoration(labelText: 'Foto'),
+                validator: (value) {
+                  if (value!.isEmpty) {
+                    return 'Foto tidak boleh kosong';
+                  }
+                  return null;
+                },
+              ),
+              SizedBox(height: 20),
+              ElevatedButton(
+                onPressed: () {
+                  submitData();
+                },
+                child: Text('Kirim Data'),
+              ),
+            ],
           ),
-          const SizedBox(height: 20.0),
-          TextFormField(
-            controller: _photoController,
-            decoration: const InputDecoration(
-              labelText: 'Foto (URL)',
-              border: OutlineInputBorder(),
-            ),
-          ),
-          const SizedBox(height: 20.0),
-          ElevatedButton(
-            onPressed: () {
-              String complaintText = _complaintController.text;
-              String photoURL = _photoController.text;
-              saveComplaintToDatabase(complaintText, photoURL);
-            },
-            child: const Text('Tambah Pengaduan'),
-          ),
-        ],
+        ),
       ),
     );
   }
+}
+
+void main() {
+  runApp(MaterialApp(
+    home: CreateComplaintScreen(),
+  ));
 }

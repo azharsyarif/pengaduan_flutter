@@ -1,12 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/screens/dashboard/home_screen.dart';
 import 'package:flutter_application_1/screens/dashboard/profile_screen.dart';
-// import 'package:flutter_application_1/screens/dashboard/profile_screen.dart';
 import 'package:flutter_application_1/screens/form/create_complaint_screen.dart';
-// import 'package:flutter_application_1/screens/profile_screen.dart'; // Import ProfileScreen
-
-import 'login_screen.dart';
-import 'register_screen.dart';
+import 'package:flutter_application_1/screens/login_screen.dart';
+import 'package:flutter_application_1/screens/register_screen.dart';
 
 void main() {
   runApp(const MyApp());
@@ -28,7 +25,8 @@ class MyApp extends StatelessWidget {
         '/login': (context) => const LoginScreen(),
         '/register': (context) => const RegisterScreen(),
         '/home': (context) => const HomeScreen(),
-        '/pengaduan': (context) => const CreateComplaintScreen(),
+        '/pengaduan': (context) => CreateComplaintScreen(),
+        // Menambahkan route untuk CreateComplaintScreen
         '/profile': (context) => const UserProfileScreen(),
       },
     );

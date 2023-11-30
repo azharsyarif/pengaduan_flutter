@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/network/api_service.dart';
-// import 'package:flutter_application_1/screens/import_service.dart'; // Ubah sesuai dengan path ke api_service.dart
 import 'package:flutter_application_1/screens/register_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
+import 'package:http/http.dart' as http;
 
 class LoginScreen extends StatelessWidget {
   const LoginScreen({Key? key}) : super(key: key);
@@ -24,6 +24,23 @@ class LoginForm extends StatefulWidget {
 
   @override
   _LoginFormState createState() => _LoginFormState();
+}
+
+class APIService {
+  Future<http.Response> login(String username, String password) async {
+    final Uri loginUri = Uri.parse('http://127.0.0.1:8000/api/login');
+    // Ganti URL dengan endpoint login dari API Anda
+
+    final response = await http.post(
+      loginUri,
+      body: {
+        'username': username,
+        'password': password,
+      },
+    );
+
+    return response;
+  }
 }
 
 class _LoginFormState extends State<LoginForm> {
@@ -53,33 +70,27 @@ class _LoginFormState extends State<LoginForm> {
     }
 
     try {
-      final response = await APIService().loginUser(username, password);
+      final response = await APIService().login(username, password);
 
-      print('Response from server: $response');
-
-      final nik = response['user']['nik'];
-
-      if (nik != null && nik is String) {
-        final userIdFromResponse =
-            response['user']['id']; // Different variable name
+      if (response.statusCode == 200) {
+        final responseData = json.decode(response.body);
+        final token = responseData['token'];
+        final userId = responseData['user']['id'];
 
         SharedPreferences prefs = await SharedPreferences.getInstance();
-        prefs.setInt('userId', userIdFromResponse);
-        int storedUserId =
-            prefs.getInt('userId') ?? 0; // Use a different variable name
-// Conflict here with the variable name
+        prefs.setString('token', token);
+        prefs.setInt('userId', userId);
 
-        // Tambahkan logika untuk menyimpan data lain jika diperlukan
-
-        Navigator.pushReplacementNamed(context, '/home');
-      } else {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Invalid data received.'),
-            backgroundColor: Colors.red,
+            content: Text('Login successful!'),
+            backgroundColor: Colors.green,
           ),
         );
+
+        Navigator.pushReplacementNamed(context, '/home');
       }
+      // ... kode lainnya
     } catch (error) {
       print('Error during login: $error');
       ScaffoldMessenger.of(context).showSnackBar(

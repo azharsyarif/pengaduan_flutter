@@ -28,7 +28,7 @@ class MyApp extends StatelessWidget {
         '/login': (context) => const LoginScreen(), // Route untuk LoginScreen
         // Ganti userId dengan ID pengguna yang sesuai
         '/pengaduan': (context) =>
-            const CreateComplaintScreen(), // Route untuk CreateComplaintScreen
+            CreateComplaintScreen(), // Route untuk CreateComplaintScreen
       },
     );
   }
@@ -73,13 +73,7 @@ class HomeScreen extends StatelessWidget {
                 children: <Widget>[
                   ElevatedButton(
                     onPressed: () {
-                      // Navigasi ke halaman CreateComplaintScreen
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const CreateComplaintScreen(),
-                        ),
-                      );
+                      Navigator.pushNamed(context, '/pengaduan');
                     },
                     child: const Text('Tambah Pengaduan'),
                   ),
