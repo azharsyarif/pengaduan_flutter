@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 
 class CreateComplaintScreen extends StatefulWidget {
   @override
@@ -10,50 +11,55 @@ class CreateComplaintScreen extends StatefulWidget {
 class _CreateComplaintScreenState extends State<CreateComplaintScreen> {
   TextEditingController isiLaporanController = TextEditingController();
   TextEditingController fotoController = TextEditingController();
-  GlobalKey<FormState> formKey =
-      GlobalKey<FormState>(); // Form key for validation
+  TextEditingController kategoriController = TextEditingController(); // Controller untuk kategori
+  GlobalKey<FormState> formKey = GlobalKey<FormState>(); // Form key for validation
 
   Future<void> submitData() async {
     if (formKey.currentState!.validate()) {
-      var url = Uri.parse('http://127.0.0.1:8000/api/pengaduan/create');
-      var response = await http.post(
-        url,
-        body: {
-          'isi_laporan': isiLaporanController.text,
-          'foto': fotoController.text,
-          // 'kategori': kategoryController.text,
-        },
-      );
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      int? userId = prefs.getInt('userId');
 
-      if (response.statusCode == 201) {
-        Map<String, dynamic> responseData = json.decode(response.body);
-        if (responseData.containsKey('message')) {
-          // Data terkirim berhasil, tampilkan alert
-          showDialog(
-            context: context,
-            builder: (BuildContext context) {
-              return AlertDialog(
-                title: Text('Sukses'),
-                content: Text(responseData['message']),
-                actions: [
-                  TextButton(
-                    onPressed: () {
-                      Navigator.of(context).pop();
-                      Navigator.pushNamed(
-                          context, '/home'); // Navigasi ke layar home
-                    },
-                    child: Text('OK'),
-                  ),
-                ],
-              );
-            },
-          );
+      if (userId != null) {
+        var url = Uri.parse('http://127.0.0.1:8000/api/pengaduan/create');
+        var response = await http.post(
+          url,
+          body: {
+            'isi_laporan': isiLaporanController.text,
+            'foto': fotoController.text,
+            'masyarakat_id': userId.toString(),
+            'kategori': kategoriController.text, // Menggunakan data dari controller kategori
+          },
+        );
+
+        if (response.statusCode == 201) {
+          Map<String, dynamic> responseData = json.decode(response.body);
+          if (responseData.containsKey('message')) {
+            showDialog(
+              context: context,
+              builder: (BuildContext context) {
+                return AlertDialog(
+                  title: Text('Sukses'),
+                  content: Text(responseData['message']),
+                  actions: [
+                    TextButton(
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                        Navigator.pushNamed(context, '/home');
+                      },
+                      child: Text('OK'),
+                    ),
+                  ],
+                );
+              },
+            );
+          } else {
+            print('Respon tidak berisi pesan');
+          }
         } else {
-          print('Respon tidak berisi pesan');
+          print('Gagal mengirim data. Status: ${response.statusCode}');
         }
       } else {
-        print('Gagal mengirim data. Status: ${response.statusCode}');
-        // Tampilkan pesan atau lakukan penanganan kesalahan lainnya
+        print('UserId tidak ditemukan dalam SharedPreferences');
       }
     }
   }
@@ -87,6 +93,17 @@ class _CreateComplaintScreenState extends State<CreateComplaintScreen> {
                 validator: (value) {
                   if (value!.isEmpty) {
                     return 'Foto tidak boleh kosong';
+                  }
+                  return null;
+                },
+              ),
+              SizedBox(height: 20),
+              TextFormField(
+                controller: kategoriController, // Controller untuk kategori
+                decoration: InputDecoration(labelText: 'Kategori'),
+                validator: (value) {
+                  if (value!.isEmpty) {
+                    return 'Kategori tidak boleh kosong';
                   }
                   return null;
                 },

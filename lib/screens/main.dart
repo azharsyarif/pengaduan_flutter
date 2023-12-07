@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_application_1/screens/dashboard/home_screen.dart';
 import 'package:flutter_application_1/screens/dashboard/profile_screen.dart';
 import 'package:flutter_application_1/screens/form/create_complaint_screen.dart';
+import 'package:flutter_application_1/screens/form/view_complaint_screen.dart';
 import 'package:flutter_application_1/screens/login_screen.dart';
 import 'package:flutter_application_1/screens/register_screen.dart';
 
@@ -28,7 +29,9 @@ class MyApp extends StatelessWidget {
         '/pengaduan': (context) => CreateComplaintScreen(),
         // Menambahkan route untuk CreateComplaintScreen
         '/profile': (context) => const UserProfileScreen(),
+        '/viewComplaint': (context) => ComplaintsPage(), // Pastikan untuk menggunakan const di sini jika memungkinkan
       },
     );
   }
 }
+  

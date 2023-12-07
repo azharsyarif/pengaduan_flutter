@@ -4,7 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert'; // Import untuk json.decode
 
 class RegisterScreen extends StatelessWidget {
-  const RegisterScreen({super.key});
+  const RegisterScreen({Key? key});
 
   @override
   Widget build(BuildContext context) {
@@ -18,7 +18,7 @@ class RegisterScreen extends StatelessWidget {
 }
 
 class RegisterForm extends StatefulWidget {
-  const RegisterForm({super.key});
+  const RegisterForm({Key? key});
 
   @override
   _RegisterFormState createState() => _RegisterFormState();
@@ -45,20 +45,23 @@ class _RegisterFormState extends State<RegisterForm> {
     );
 
     if (response.statusCode == 200) {
-      // Registrasi berhasil, ambil data yang diperlukan dari respons
       final responseData = json.decode(response.body);
       final registeredUsername = responseData['username'];
       final registeredUserId = responseData['user_id'];
 
-      // Simpan data di SharedPreferences
       SharedPreferences prefs = await SharedPreferences.getInstance();
       prefs.setString('username', registeredUsername);
       prefs.setInt('user_id', registeredUserId);
 
-      // Redirect ke halaman login
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Registrasi berhasil!'),
+          backgroundColor: Colors.green,
+        ),
+      );
+
       Navigator.pushReplacementNamed(context, '/login');
     } else {
-      // Registrasi gagal, tangani kesalahan
       print('Registrasi gagal: ${response.statusCode}');
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(

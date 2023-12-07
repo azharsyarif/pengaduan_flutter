@@ -69,7 +69,7 @@ class _LoginFormState extends State<LoginForm> {
       return;
     }
 
-    try {
+     try {
       final response = await APIService().login(username, password);
 
       if (response.statusCode == 200) {
